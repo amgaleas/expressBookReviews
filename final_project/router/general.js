@@ -33,96 +33,124 @@ public_users.post("/register", (req, res) => {
 
 // Get the book list available in the shop
 public_users.get('/', function (req, res) {
-  try {
+  new Promise((resolve, reject) => {
     // Verificar si existe al menos 1 elemento
     if (Object.keys(books).length > 0) {
-      res.json(books);
+      // Guardamos la información
+      resolve(books);
     } else {
-      res.status(404).send("El repositorio está vacío");
+      // Guardamos un mensaje de error
+      reject("El repositorio está vacío");
     }
-  } catch (error) {
-    return res.status(401).json({ message: "Ha ocurrido un error: " + error.message });
-  }
+  }).then((data) => {
+    // Enviamos la información
+    res.json(data);
+  }).catch((error) => {
+    // Enviamos el correspondiente mensaje en caso de error
+    res.status(404).send(error);
+  });
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn', function (req, res) {
-  try {
+  new Promise((resolve, reject) => {
     // Obtener el ISBN del parámetro de la URL
     const { isbn } = req.params;
 
     // Obtener el libro correspondiente al ISBN
     const bookISBN = Object.values(books).find(book => book.isbn === isbn);
 
-    // Verificar si el libro
+    // Guardamos los resultados
     if (bookISBN) {
-      res.json(bookISBN);
+      resolve(bookISBN);
     } else {
-      return res.status(402).json({ message: "No existe el libro con ISBN: " + isbn });
+      reject("No existe el libro con ISBN: " + isbn);
     }
-  } catch (error) {
-    return res.status(401).json({ message: "Ha ocurrido un error: " + error.message });
-  }
+  }).then((data) => {
+    // Enviamos la información
+    res.json(data);
+  }).catch((error) => {
+    // Enviamos el correspondiente mensaje en caso de error
+    res.status(402).json({ message: error });
+  });
 });
 
 // Get book details based on author
 public_users.get('/author/:author', function (req, res) {
-  try {
+  new Promise((resolve, reject) => {
     // Obtener el Autor del parámetro de la URL
     const { author } = req.params;
 
-    // Obtener el libro correspondiente al Autor
+    // Obtener los libros correspondientes al Autor
     const bookAuthor = Object.values(books).filter(book => book.author === author);
 
-    // Verificar si existe al menos 1 elemento
+    // Guardamos los resultados
     if (bookAuthor.length > 0) {
-      res.json(bookAuthor);
+      resolve(bookAuthor);
     } else {
-      return res.status(402).json({ message: "No existe libro con el Autor: " + author });
+      reject("No existe libro con el Autor: " + author);
     }
-  } catch (error) {
-    return res.status(401).json({ message: "Ha ocurrido un error: " + error.message });
-  }
+  }).then((data) => {
+    // Enviamos la información
+    res.json(data);
+  }).catch((error) => {
+    // Enviamos el correspondiente mensaje en caso de error
+    res.status(402).json({ message: error });
+  });
 });
 
 // Get all books based on title
 public_users.get('/title/:title', function (req, res) {
-  try {
+  new Promise((resolve, reject) => {
     // Obtener el Título del parámetro de la URL
     const { title } = req.params;
 
-    // Obtener el libro correspondiente al Título
+    // Obtener los libros correspondientes al Título
     const bookTitle = Object.values(books).filter(book => book.title === title);
 
-    // Verificar si existe al menos 1 elemento
+    // Guardamos los resultados
     if (bookTitle.length > 0) {
-      res.json(bookTitle);
+      resolve(bookTitle);
     } else {
-      return res.status(402).json({ message: "No existe libro con el Título: " + title });
+      reject("No existe libro con el Título: " + title);
     }
-  } catch (error) {
-    return res.status(401).json({ message: "Ha ocurrido un error: " + error.message });
-  }
+  }).then((data) => {
+    // Enviamos la información
+    res.json(data);
+  }).catch((error) => {
+    // Enviamos el correspondiente mensaje en caso de error
+    res.status(402).json({ message: error });
+  });
 });
 
 // Get book review
 public_users.get('/review/:isbn', function (req, res) {
-  try {
-    // Obtener el ISBN del parámetro de la URL
-    const { isbn } = req.params;
+  // Obtener el ISBN del parámetro de la URL
+  const { isbn } = req.params;
 
-    // Obtener el libro correspondiente al ISBN
-    const bookISBN = Object.values(books).find(book => book.isbn === isbn);
+  // Obtener el libro correspondiente al ISBN
+  const bookISBN = Object.values(books).find(book => book.isbn === isbn);
 
-    // Verificar si existe al menos 1 elemento
-    if (bookISBN && bookISBN.reviews && Object.keys(bookISBN.reviews).length > 0) {
-      res.json(bookISBN.reviews);
-    } else {
-      return res.status(402).json({ message: "No existen reseñas del libro con ISBN: " + isbn });
-    }
-  } catch (error) {
-    return res.status(401).json({ message: "Ha ocurrido un error: " + error.message });
+  // Verificar si existe el libro
+  if (!bookISBN) {
+    return res.status(402).json({ message: "No existe libro con ISBN: " + isbn });
   }
+
+  // Obtener las reseñas del libro
+  const getReviews = new Promise((resolve, reject) => {
+    // Guardamos los resultados
+    if (bookISBN.reviews && Object.keys(bookISBN.reviews).length > 0) {
+      resolve(bookISBN.reviews);
+    } else {
+      reject(new Error("No existen reseñas del libro con ISBN: " + isbn));
+    }
+  });
+
+  getReviews
+    // Enviamos la información
+    .then(reviews => res.json(reviews))
+    // Enviamos el correspondiente mensaje en caso de error
+    .catch(error => res.status(402).json({ message: error.message }));
 });
 
 module.exports.general = public_users;
